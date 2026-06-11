@@ -17,8 +17,7 @@ def render():
 
     df = load_data()
 
-    # Tombol 1 baris — nowrap via CSS sudah di utils
-    run_eval = st.button("Jalankan Evaluasi dengan 2.000 data")
+    run_eval = st.button("Jalankan Evaluasi dengan 23.000 data")
 
     if run_eval:
         with st.spinner("Mengevaluasi Mamdani..."):
