@@ -7,7 +7,7 @@ from app.sidebar    import render_sidebar
 from app.components import home, predict, membership, evaluasi
 
 st.set_page_config(
-    page_title="BurnSense",
+    page_title="BurnSense AI",
     page_icon="🔴",
     layout="wide",
     initial_sidebar_state="expanded"
