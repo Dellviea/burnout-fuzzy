@@ -3,12 +3,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import streamlit as st
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 
 from app.utils import C, page_header, load_data, compute_metrics, section_header
-from fuzzy.mamdani import mamdani_batch, mamdani_predict
-from fuzzy.sugeno  import sugeno_batch,  sugeno_predict
+from fuzzy.mamdani import mamdani_batch
+from fuzzy.sugeno  import sugeno_batch
 
 
 def render():
@@ -17,17 +16,20 @@ def render():
 
     df = load_data()
 
-    run_eval = st.button("Jalankan Evaluasi dengan 23.000 data")
+    run_eval = st.button("Jalankan Evaluasi (2.000 data sampel)")
 
     if run_eval:
+        # waktu = total 2.000 data (1 data terlalu cepat, bisa terbaca 0.0s)
         with st.spinner("Mengevaluasi Mamdani..."):
+            t0 = time.perf_counter()
             act_m, pred_m = mamdani_batch(df, sample_size=2000)
+            rt_m = round(time.perf_counter() - t0, 3)
         with st.spinner("Mengevaluasi Sugeno..."):
+            t0 = time.perf_counter()
             act_s, pred_s = sugeno_batch(df, sample_size=2000)
+            rt_s = round(time.perf_counter() - t0, 3)
         mae_m, mse_m, rmse_m = compute_metrics(act_m, pred_m)
         mae_s, mse_s, rmse_s = compute_metrics(act_s, pred_s)
-        t0 = time.time(); mamdani_predict(7.0,8.0,4,0,1); rt_m = round(time.time()-t0,4)
-        t0 = time.time(); sugeno_predict(7.0,8.0,4,0,1);  rt_s = round(time.time()-t0,4)
         st.session_state['eval'] = dict(
             mae_m=mae_m, mse_m=mse_m, rmse_m=rmse_m, rt_m=rt_m,
             mae_s=mae_s, mse_s=mse_s, rmse_s=rmse_s, rt_s=rt_s)
@@ -49,6 +51,14 @@ border-radius:10px;padding:24px;text-align:center;margin-top:12px'>
     mae_m,mse_m,rmse_m,rt_m = ev['mae_m'],ev['mse_m'],ev['rmse_m'],ev['rt_m']
     mae_s,mse_s,rmse_s,rt_s = ev['mae_s'],ev['mse_s'],ev['rmse_s'],ev['rt_s']
     speedup = round(rt_m/rt_s,1) if rt_s > 0 else "–"
+    acc_win = "Mamdani" if rmse_m <= rmse_s else "Sugeno"
+    spd_win = "Mamdani" if rt_m   <= rt_s   else "Sugeno"
+    if acc_win == spd_win:
+        kesimpulan = (f"<b>{acc_win}</b> unggul di akurasi (RMSE {min(rmse_m,rmse_s):.4f}) "
+                      f"sekaligus kecepatan, sehingga <b>{acc_win} lebih direkomendasikan</b>.")
+    else:
+        kesimpulan = (f"Terdapat trade-off: <b>{acc_win}</b> lebih akurat, <b>{spd_win}</b> lebih cepat. "
+                      f"Untuk prediksi yang mengutamakan presisi, <b>{acc_win} lebih direkomendasikan</b>.")
 
     # -------- Tabel-------------------------------------------
     def _w(a, b, lower=True):
@@ -78,19 +88,19 @@ border-radius:10px;padding:16px;margin-bottom:14px'>
       <th style='text-align:center;padding:8px 0;color:{C['gray']};font-size:12px;
       text-transform:uppercase;letter-spacing:0.5px'>Lebih Baik</th>
     </tr>
-    {_erow('MAE',             mae_m,  mae_s,  _w(mae_m,mae_s))}
-    {_erow('MSE',             mse_m,  mse_s,  _w(mse_m,mse_s))}
-    {_erow('RMSE',            rmse_m, rmse_s, _w(rmse_m,rmse_s))}
-    {_erow('Waktu komputasi', f'{rt_m}s', f'{rt_s}s', _w(rt_m,rt_s,lower=True), last=True)}
+    {_erow('MAE',             f'{mae_m:.4f}',  f'{mae_s:.4f}',  _w(mae_m,mae_s))}
+    {_erow('MSE',             f'{mse_m:.4f}',  f'{mse_s:.4f}',  _w(mse_m,mse_s))}
+    {_erow('RMSE',            f'{rmse_m:.4f}', f'{rmse_s:.4f}', _w(rmse_m,rmse_s))}
+    {_erow('Waktu (2.000 data)', f'{rt_m}s', f'{rt_s}s', _w(rt_m,rt_s,lower=True), last=True)}
   </table>
 </div>""", unsafe_allow_html=True)
 
     # --- 3 chart dengan legend -------------------------------------------
     cc1, cc2, cc3 = st.columns(3)
-    for col, title, vm, vs in [
-        (cc1,'MAE',             mae_m,  mae_s),
-        (cc2,'RMSE',            rmse_m, rmse_s),
-        (cc3,'Waktu Komputasi', rt_m,   rt_s),
+    for col, title, vm, vs, fmt in [
+        (cc1,'MAE',                 mae_m,  mae_s,  '{:.4f}'),
+        (cc2,'RMSE',                rmse_m, rmse_s, '{:.4f}'),
+        (cc3,'Waktu Komputasi (s)', rt_m,   rt_s,   '{:.3f}s'),
     ]:
         with col:
             max_v = max(vm, vs, 0.0001)
@@ -104,17 +114,8 @@ border-radius:10px;padding:16px;margin-bottom:14px'>
             for bar, val in zip(bars,[vm,vs]):
                 ax.text(bar.get_x()+bar.get_width()/2,
                         bar.get_height()+max_v*0.04,
-                        f'{val}', ha='center', va='bottom',
+                        fmt.format(val), ha='center', va='bottom',
                         fontsize=9.5, fontweight='bold', color=C['black'])
-
-            # -------- Legend -------------------------------------------
-            legend_handles = [
-                mpatches.Patch(color=C['pink'], label='Mamdani'),
-                mpatches.Patch(color=C['blue'], label='Sugeno'),
-            ]
-            ax.legend(handles=legend_handles, fontsize=9,
-                      loc='upper right', framealpha=0.7,
-                      edgecolor=C['gray_light'])
 
             ax.set_ylim(0, max_v*1.4)
             ax.set_title(title, fontsize=12, fontweight='700',
@@ -137,26 +138,24 @@ border-radius:10px;padding:16px;margin-top:8px'>
     <div style='background:{C['white']};border:0.5px solid {C['pink_light']};
     border-radius:8px;padding:14px'>
       <div style='font-size:13px;font-weight:700;color:{C['pink_dark']};margin-bottom:8px'>
-        Mamdani — Lebih Akurat</div>
+        Mamdani — Centroid</div>
       <div style='font-size:13px;color:{C['gray']};line-height:1.7'>
-        MAE &amp; RMSE lebih rendah. Defuzzifikasi centroid menangkap ketidakpastian
-        linguistik lebih baik. Cocok saat interpretabilitas hasil penting.
+        MAE {mae_m:.4f} · RMSE {rmse_m:.4f}. Output berupa himpunan fuzzy yang didefuzzifikasi
+        centroid, lebih interpretable namun butuh integrasi numerik.
       </div>
     </div>
     <div style='background:{C['white']};border:0.5px solid {C['blue_light']};
     border-radius:8px;padding:14px'>
       <div style='font-size:13px;font-weight:700;color:{C['blue_dark']};margin-bottom:8px'>
-        Sugeno — Lebih Cepat</div>
+        Sugeno — Weighted Average</div>
       <div style='font-size:13px;color:{C['gray']};line-height:1.7'>
-        Waktu komputasi {speedup}× lebih singkat. Weighted average tidak memerlukan
-        integrasi numerik. Cocok untuk sistem real-time atau dataset besar.
+        MAE {mae_s:.4f} · RMSE {rmse_s:.4f}. Waktu komputasi {speedup}× dibanding Mamdani,
+        karena weighted average tidak memerlukan integrasi numerik.
       </div>
     </div>
   </div>
   <div style='background:{C['white']};border:0.5px solid {C['pink_light']};
   border-radius:8px;padding:14px;font-size:13px;color:{C['black']};line-height:1.7'>
-    <b>Kesimpulan:</b> Terdapat trade-off antara akurasi dan kecepatan komputasi.
-    Untuk sistem prediksi burnout yang mengutamakan presisi,
-    <b>Mamdani lebih direkomendasikan</b>.
+    <b>Kesimpulan:</b> {kesimpulan}
   </div>
 </div>""", unsafe_allow_html=True)

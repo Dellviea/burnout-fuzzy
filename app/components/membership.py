@@ -4,18 +4,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
-from app.utils import C, page_header
+from app.utils import C, LEVEL, page_header
 from fuzzy.membership import get_mf_curves
 
+# Tiap label beda warna; LOW->HIGH pakai warna semantik level (hijau -> oranye -> pink)
 COLORS = {
-    'LOW':      C['pink_light'],
-    'MEDIUM':   C['pink'],
-    'HIGH':     C['pink_darker'],
-    'JUNIOR':   C['pink_light'],
+    'LOW':      LEVEL['LOW'],
+    'MEDIUM':   LEVEL['MODERATE'],
+    'HIGH':     LEVEL['HIGH'],
+    'MODERATE': LEVEL['MODERATE'],
+    'SEVERE':   LEVEL['SEVERE'],
+    'JUNIOR':   '#DB6F98',
     'MID':      C['pink'],
-    'SENIOR':   C['pink_darker'],
-    'MODERATE': C['pink_med'],
-    'SEVERE':   C['pink_darker'],
+    'SENIOR':   LEVEL['SEVERE'],
 }
 
 
@@ -26,9 +27,10 @@ def _mf_chart(ax, curves, var_key, labels):
                 linewidth=2.5, label=lbl.capitalize())
     ax.set_xlabel(cv['xlabel'], fontsize=11, color=C['gray_dark'])
     ax.set_ylabel('Derajat Keanggotaan', fontsize=11, color=C['gray_dark'])
-    ax.set_ylim(-0.05, 1.2)
-    ax.legend(fontsize=10, framealpha=0.5, loc='upper right',
-              edgecolor=C['gray_light'])
+    ax.set_ylim(-0.05, 1.08)
+    # legend di atas plot supaya tidak menutupi garis
+    ax.legend(fontsize=10, loc='lower center', bbox_to_anchor=(0.5, 1.0),
+              ncol=len(labels), frameon=False, handlelength=1.6)
     ax.tick_params(labelsize=10, colors=C['gray'])
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -59,14 +61,12 @@ def render():
             _mf_chart(ax, curves, var_key, labels)
             plt.tight_layout(pad=0.8)
 
-            st.markdown(f"""
-<div style='background:{C['white']};border:0.5px solid {C['pink_light']};
-border-radius:10px;padding:14px 14px 0 14px;margin-bottom:4px'>
-  <div style='font-size:13px;font-weight:700;color:{C['black']};margin-bottom:10px'>
-    {title}</div>""", unsafe_allow_html=True)
-            st.pyplot(fig, use_container_width=True)
+            # div HTML tidak bisa membungkus elemen Streamlit lain, pakai container
+            with st.container(border=True):
+                st.markdown(f"<div style='font-size:14px;font-weight:700;color:{C['black']}'>{title}</div>",
+                            unsafe_allow_html=True)
+                st.pyplot(fig, use_container_width=True)
             plt.close()
-            st.markdown("</div>", unsafe_allow_html=True)
 
     # Tabel parameter -------------------------------------------
     st.markdown(f"""

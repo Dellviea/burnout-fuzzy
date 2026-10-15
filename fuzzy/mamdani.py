@@ -72,7 +72,7 @@ def get_burnout_level(burn_rate):
 
 
 def mamdani_predict(fatigue, resource, designation, wfh, company_type, n_points=200):
-    t0          = time.time()
+    t0          = time.perf_counter()
     fuzz        = fuzzify_all(fatigue, resource, designation, wfh, company_type)
     fired_rules = evaluate_rules(fuzz)
     x_values    = np.linspace(0, 1, n_points)
@@ -85,7 +85,7 @@ def mamdani_predict(fatigue, resource, designation, wfh, company_type, n_points=
         'aggregated':  agg,
         'x_values':    x_values,
         'fuzz':        fuzz,
-        'runtime':     round(time.time() - t0, 4)
+        'runtime':     round(time.perf_counter() - t0, 6)
     }
 
 

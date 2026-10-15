@@ -3,8 +3,8 @@ import numpy as np
 
 def trapezoid(x, a, b, c, d):
     x = float(x)
+    if b <= x <= c:      return 1.0   # cek plateau dulu, biar bahu (a==b / c==d) tetap 1
     if x <= a or x >= d: return 0.0
-    if b <= x <= c:      return 1.0
     if a < x < b:        return (x - a) / (b - a)
     if c < x < d:        return (d - x) / (d - c)
     return 0.0

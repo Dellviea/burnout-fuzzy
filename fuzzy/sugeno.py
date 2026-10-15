@@ -30,7 +30,7 @@ def weighted_average(fired_rules):
 
 
 def sugeno_predict(fatigue, resource, designation, wfh, company_type):
-    t0          = time.time()
+    t0          = time.perf_counter()
     fuzz        = fuzzify_all(fatigue, resource, designation, wfh, company_type)
     fired_rules = evaluate_rules_sugeno(fuzz)
     burn_rate   = weighted_average(fired_rules)
@@ -39,7 +39,7 @@ def sugeno_predict(fatigue, resource, designation, wfh, company_type):
         'level':       get_burnout_level(burn_rate),
         'fired_rules': fired_rules,
         'fuzz':        fuzz,
-        'runtime':     round(time.time() - t0, 4)
+        'runtime':     round(time.perf_counter() - t0, 6)
     }
 
 
