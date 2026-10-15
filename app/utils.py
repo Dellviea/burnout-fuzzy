@@ -4,13 +4,13 @@ import pandas as pd
 import streamlit as st
 
 C = {
-    'pink':        '#BF3B69',   # >=4.5:1 di atas putih (WCAG AA)
-    'pink_dark':   '#993556',
-    'pink_darker': '#72243E',
-    'pink_light':  '#F4C0D1',
-    'pink_med':    '#ED93B1',
-    'pink_bg':     '#FFF0F5',
-    'pink_soft':   '#FBEAF0',
+    'pink':        '#D6336C',   # >=4.5:1 di atas putih (WCAG AA)
+    'pink_dark':   '#A61E4D',
+    'pink_darker': '#7D1538',
+    'pink_light':  '#FCC2D7',
+    'pink_med':    '#F783AC',
+    'pink_bg':     '#FFF0F6',
+    'pink_soft':   '#FFDEEB',
     'blue':        '#2B6CB0',
     'blue_dark':   '#185FA5',
     'blue_bg':     '#E6F1FB',
@@ -104,7 +104,7 @@ button[data-testid="stBaseButton-headerNoPadding"],
     margin: 0 !important;
     width: 100% !important;
     display: flex !important;
-    box-shadow: 0 2px 6px rgba(212,83,126,0.07) !important;
+    box-shadow: 0 2px 6px rgba(214,51,108,0.07) !important;
 }}
 .stTabs [role="tab"] {{
     flex: 1 1 0 !important;
@@ -190,7 +190,7 @@ button[data-testid="stBaseButton-headerNoPadding"],
     font-size: 14px !important;
     font-weight: 700 !important;
     white-space: nowrap !important;
-    box-shadow: 0 2px 8px rgba(212,83,126,0.25) !important;
+    box-shadow: 0 2px 8px rgba(214,51,108,0.25) !important;
     transition: background 0.15s !important;
 }}
 .stButton > button:hover {{
