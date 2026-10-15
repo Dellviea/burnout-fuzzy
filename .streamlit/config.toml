@@ -2,7 +2,7 @@
 # tanpa ini teks sidebar jadi putih di atas pink saat browser/OS dalam dark mode.
 [theme]
 base = "light"
-primaryColor = "#BF3B69"
+primaryColor = "#D6336C"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#FFF0F5"
+secondaryBackgroundColor = "#FFF0F6"
 textColor = "#111111"
