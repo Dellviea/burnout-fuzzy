@@ -44,6 +44,7 @@ html, body, *:not([data-testid="stIconMaterial"]):not(.material-symbols-rounded)
 [data-testid="stSidebarNav"],
 [data-testid="stSidebarNavItems"],
 [data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarHeader"],
 button[data-testid="stBaseButton-header"],
 button[data-testid="stBaseButton-headerNoPadding"],
 [data-testid="stHeader"],
@@ -84,14 +85,15 @@ button[data-testid="stBaseButton-headerNoPadding"],
 }}
 
 /* ── Block container ── */
-.block-container {{
+.block-container,
+[data-testid="stMainBlockContainer"] {{
     padding-top: 0 !important;
     padding-bottom: 2rem !important;
     max-width: 100% !important;
 }}
 
 /* ── Tabs — sticky + full width + bold + no emoji ── */
-.stTabs [data-baseweb="tab-list"] {{
+.stTabs [role="tablist"] {{
     position: sticky !important;
     top: 0 !important;
     z-index: 9999 !important;
@@ -104,7 +106,7 @@ button[data-testid="stBaseButton-headerNoPadding"],
     display: flex !important;
     box-shadow: 0 2px 6px rgba(212,83,126,0.07) !important;
 }}
-.stTabs [data-baseweb="tab"] {{
+.stTabs [role="tab"] {{
     flex: 1 1 0 !important;
     color: {C['gray']} !important;
     font-size: 14px !important;
@@ -121,7 +123,13 @@ button[data-testid="stBaseButton-headerNoPadding"],
     transition: all 0.15s !important;
     min-width: 0 !important;
 }}
-.stTabs [data-baseweb="tab"]:hover {{
+.stTabs div:has(> [role="tablist"]) {{ width: 100% !important; }}
+.stTabs [role="tab"] p {{
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    color: inherit !important;
+}}
+.stTabs [role="tab"]:hover {{
     color: {C['pink']} !important;
     background: {C['pink_bg']} !important;
 }}
@@ -131,14 +139,16 @@ button[data-testid="stBaseButton-headerNoPadding"],
     border-bottom: 3px solid {C['pink']} !important;
     font-weight: 800 !important;
 }}
-.stTabs [data-baseweb="tab-panel"] {{
+.stTabs [role="tabpanel"] {{
     padding-top: 20px !important;
 }}
-.stTabs [data-baseweb="tab-border"] {{
+.stTabs [data-baseweb="tab-border"],
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs .react-aria-SelectionIndicator {{
     display: none !important;
 }}
 /* Garis full width via pseudo element */
-.stTabs [data-baseweb="tab-list"]::after {{
+.stTabs [role="tablist"]::after {{
     content: '' !important;
     position: absolute !important;
     bottom: 0 !important;
