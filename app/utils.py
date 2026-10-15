@@ -4,18 +4,18 @@ import pandas as pd
 import streamlit as st
 
 C = {
-    'pink':        '#D4537E',
+    'pink':        '#BF3B69',   # >=4.5:1 di atas putih (WCAG AA)
     'pink_dark':   '#993556',
     'pink_darker': '#72243E',
     'pink_light':  '#F4C0D1',
     'pink_med':    '#ED93B1',
     'pink_bg':     '#FFF0F5',
     'pink_soft':   '#FBEAF0',
-    'blue':        '#378ADD',
+    'blue':        '#2B6CB0',
     'blue_dark':   '#185FA5',
     'blue_bg':     '#E6F1FB',
     'blue_light':  '#B5D4F4',
-    'gray':        '#888888',
+    'gray':        '#666666',   # >=4.5:1 di atas putih & pink_bg
     'gray_dark':   '#444444',
     'gray_light':  '#EEEEEE',
     'bg':          '#F7F7F7',
@@ -25,18 +25,24 @@ C = {
     'green_bg':    '#EAF3DE',
 }
 
+# Warna semantik per level burnout, dipakai di badge, meter, dan grafik MF output
+LEVEL = {
+    'LOW':      '#2E7D32',
+    'MODERATE': '#E07B00',
+    'HIGH':     '#D81B60',
+    'SEVERE':   '#7A1340',
+}
+
 def inject_css():
     st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-html, body, * {{ font-family: 'Inter', sans-serif !important; box-sizing: border-box; }}
+html, body, *:not([data-testid="stIconMaterial"]):not(.material-symbols-rounded) {{ font-family: 'Inter', sans-serif !important; box-sizing: border-box; }}
 .stApp {{ background: {C['white']}; }}
 
 /* ── Sembunyikan semua chrome Streamlit ── */
 [data-testid="stSidebarNav"],
 [data-testid="stSidebarNavItems"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarCollapsedControl"],
 [data-testid="stSidebarCollapseButton"],
 button[data-testid="stBaseButton-header"],
 button[data-testid="stBaseButton-headerNoPadding"],
@@ -73,8 +79,7 @@ button[data-testid="stBaseButton-headerNoPadding"],
     font-size: 12px !important;
     font-weight: 600 !important;
 }}
-[data-testid="stSidebarCollapseButton"],
-[data-testid="stSidebar"] button {{
+[data-testid="stSidebarCollapseButton"] {{
     display: none !important;
 }}
 
@@ -145,20 +150,20 @@ button[data-testid="stBaseButton-headerNoPadding"],
 }}
 
 /* ── Metric ── */
-[data-testid="metric-container"] {{
+[data-testid="stMetric"] {{
     background: {C['white']} !important;
     border: 1px solid {C['pink_light']} !important;
     border-radius: 10px !important;
     padding: 14px 16px !important;
 }}
-[data-testid="metric-container"] label {{
+[data-testid="stMetric"] label, [data-testid="stMetricLabel"] p {{
     color: {C['pink_dark']} !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
 }}
-[data-testid="metric-container"] [data-testid="stMetricValue"] {{
+[data-testid="stMetricValue"] {{
     color: {C['black']} !important;
     font-size: 26px !important;
     font-weight: 800 !important;
@@ -206,10 +211,10 @@ button[data-testid="stBaseButton-headerNoPadding"],
 
 def level_color(level):
     return {
-        'LOW':      ('#E8F5E9', '#1B5E20', '#4CAF50'),
-        'MODERATE': ('#FFF8E1', '#E65100', '#FF9800'),
-        'HIGH':     (C['pink_bg'],   C['pink_dark'],   C['pink']),
-        'SEVERE':   (C['pink_soft'], C['pink_darker'], C['pink_dark']),
+        'LOW':      ('#E8F5E9', '#1B5E20', LEVEL['LOW']),
+        'MODERATE': ('#FFF8E1', '#B34700', LEVEL['MODERATE']),
+        'HIGH':     ('#FCE4EC', '#AD1457', LEVEL['HIGH']),
+        'SEVERE':   (C['pink_soft'], LEVEL['SEVERE'], LEVEL['SEVERE']),
     }.get(level, (C['pink_bg'], C['pink_dark'], C['pink']))
 
 
@@ -258,9 +263,9 @@ def load_data():
     df   = df.drop(columns=['Employee ID', 'Date of Joining', 'Gender'], errors='ignore')
     df['WFH_encoded']     = df['WFH Setup Available'].map({'Yes': 1, 'No': 0})
     df['Company_encoded'] = df['Company Type'].map({'Product': 1, 'Service': 0})
-    for col in ['Mental Fatigue Score', 'Resource Allocation', 'Burn Rate']:
-        if col in df.columns:
-            df[col] = df[col].fillna(df[col].median())
+    df   = df.dropna(subset=['Burn Rate'])   # target tidak boleh diimputasi (ground truth)
+    for col in ['Mental Fatigue Score', 'Resource Allocation']:
+        df[col] = df[col].fillna(df[col].median())
     return df
 
 

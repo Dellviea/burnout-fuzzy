@@ -8,7 +8,7 @@ import numpy as np
 
 from fuzzy.mamdani import mamdani_predict
 from fuzzy.sugeno  import sugeno_predict
-from app.utils import C, page_header, level_color, recommendations
+from app.utils import C, LEVEL, page_header, level_color, recommendations
 
 
 def render(fatigue, resource, designation, wfh, company):
@@ -63,7 +63,7 @@ border-radius:10px;padding:16px;margin-bottom:12px'>
   <div style='font-size:32px;font-weight:800;color:{C['black']};
   margin-bottom:4px;letter-spacing:-1px'>{res['burn_rate']:.3f}</div>
   <div style='font-size:11px;color:{C['gray']};margin-bottom:10px'>
-    {method} · {res['runtime']}s</div>
+    {method} · {res['runtime']*1000:.2f} ms</div>
   <div style='font-size:12px;font-weight:500;margin-bottom:6px'>
     Burn rate: {res['burn_rate']*100:.1f}%</div>
   <div style='height:6px;background:{C['gray_light']};border-radius:3px;overflow:hidden'>
@@ -75,43 +75,36 @@ border-radius:10px;padding:16px;margin-bottom:12px'>
     # -------- Burnout Meter -------------------------------------------
     bm1, bm2 = st.columns(2)
 
-    with bm1:
-
-        fig, ax = plt.subplots(figsize=(5, 3.6), subplot_kw=dict(aspect='equal'))
+    with bm1, st.container(border=True):
+        st.markdown(f"<div style='font-size:14px;font-weight:700;color:{C['black']}'>Burnout Meter</div>",
+                    unsafe_allow_html=True)
+        fig, ax = plt.subplots(figsize=(5, 3.1), subplot_kw=dict(aspect='equal'))
         fig.patch.set_facecolor('white')
         ax.set_facecolor('white')
-        fig.text(0.5, 0.97, 'Burnout Meter', ha='center', va='top',
-                 fontsize=13, fontweight='700', color=C['black'])
 
-        segs = [(0.00,0.30,'#4CAF50'),(0.30,0.55,'#FF9800'),
-                (0.55,0.75,'#FF4081'),(0.75,1.00,'#C51162')]
-        for lo, hi, clr in segs:
-            t1, t2 = 180 - lo*180, 180 - hi*180
-            ax.add_patch(mpatches.Wedge((.5,0),.42, t2, t1,
-                         width=.15, facecolor=clr, alpha=.92))
+        segs = [(0.00, 0.30, 'LOW'), (0.30, 0.55, 'MODERATE'),
+                (0.55, 0.75, 'HIGH'), (0.75, 1.00, 'SEVERE')]
+        for lo, hi, lvl in segs:
+            ax.add_patch(mpatches.Wedge((.5, 0), .42, 180 - hi*180, 180 - lo*180,
+                         width=.13, facecolor=LEVEL[lvl], edgecolor='white', linewidth=2))
+            # label di tengah tiap segmen, tepat di luar arc
+            a = np.radians(180 - (lo + hi) / 2 * 180)
+            ax.text(.5 + .5*np.cos(a), .5*np.sin(a), {'MODERATE': 'MOD', 'SEVERE': 'SEV'}.get(lvl, lvl),
+                    ha='center', va='center', fontsize=9, fontweight='bold', color=LEVEL[lvl])
 
         ang = np.radians(180 - m['burn_rate']*180)
-        ax.annotate('', xy=(.5+.32*np.cos(ang), .32*np.sin(ang)),
-                    xytext=(.5, 0),
-                    arrowprops=dict(arrowstyle='->', color='#1a1a1a',
-                                   lw=3, mutation_scale=14))
-        ax.plot(.5, 0, 'o', color='#1a1a1a', markersize=7, zorder=5)
+        ax.annotate('', xy=(.5 + .3*np.cos(ang), .3*np.sin(ang)), xytext=(.5, 0),
+                    arrowprops=dict(arrowstyle='-|>', color=C['black'], lw=2.5, mutation_scale=16))
+        ax.plot(.5, 0, 'o', color=C['black'], markersize=8, zorder=5)
 
-        ax.text(.5, .11, f"{m['burn_rate']:.3f}",
-                ha='center', va='center', fontsize=15,
-                fontweight='bold', color=C['black'])
-        ax.text(.5, -.02, "Mamdani",
-                ha='center', va='center', fontsize=9, color=C['gray'])
+        # nilai di bawah poros jarum, tidak tertimpa jarum
+        ax.text(.5, -.1, f"{m['burn_rate']:.3f}", ha='center', va='center',
+                fontsize=17, fontweight='bold', color=C['black'])
+        ax.text(.5, -.2, f"Mamdani · {m['level']}", ha='center', va='center',
+                fontsize=9, color=C['gray'])
 
-        # ---- Label di luar arc -------------------------------------------
-        for lbl, pos in [('LOW',.04),('MOD',.34),('HIGH',.66),('SEV',.96)]:
-            a = np.radians(180 - pos*180)
-            ax.text(.5 + .58*np.cos(a), .58*np.sin(a), lbl,
-                    ha='center', va='center',
-                    fontsize=9, color='#444', fontweight='bold')
-
-        ax.set_xlim(-.1, 1.1)
-        ax.set_ylim(-.15, .72)
+        ax.set_xlim(-.05, 1.05)
+        ax.set_ylim(-.26, .56)
         ax.axis('off')
         plt.tight_layout(pad=0)
         st.pyplot(fig, use_container_width=True)
@@ -139,7 +132,7 @@ border-radius:10px;padding:16px;height:100%'>
   <div style='margin-bottom:18px'>
     <div style='display:flex;justify-content:space-between;margin-bottom:5px'>
       <span style='font-size:13px;font-weight:600;color:{C['black']}'>Sugeno</span>
-      <span style='font-size:13px;font-weight:700;color:{C['blue']}'>{s['burn_rate']*100:.0f}%</span>
+      <span style='font-size:13px;font-weight:700;color:{C['blue_dark']}'>{s['burn_rate']*100:.0f}%</span>
     </div>
     <div style='height:10px;background:{C['gray_light']};border-radius:5px;overflow:hidden'>
       <div style='height:100%;width:{s['burn_rate']*100:.1f}%;
@@ -177,9 +170,7 @@ border-radius:10px;padding:16px;height:100%'>
                 conds += (f"<span style='background:{C['bg']};border:0.5px solid #ddd;"
                           f"border-radius:4px;padding:2px 8px;font-size:11px;"
                           f"font-weight:600;color:{C['black']}'>{lbl}</span>")
-            out_clr = (C['pink_darker'] if rule['output'] == 'SEVERE' else
-                       C['pink']       if rule['output'] == 'HIGH'   else
-                       '#E65100'       if rule['output'] == 'MODERATE' else '#27500A')
+            out_clr = level_color(rule['output'])[1]
             rules_html += f"""
 <div style='background:{C['bg']};border-radius:8px;padding:10px 12px;margin-bottom:8px'>
   <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'>
